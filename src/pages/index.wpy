@@ -1,0 +1,234 @@
+<style lang="less">
+@import '../font/icon-font.wxss';
+//搜索
+.scontainer {
+  // height: 100rpx;
+  background-color: #ff2d4a;
+  padding: 20rpx 16rpx;
+  .swrapper {
+    height: 60rpx;
+    background-color: #fff;
+    border-radius: 10rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+// 首页轮播图
+swiper {
+  height: 340rpx;
+  image {
+    width: 100%;
+    height: 340rpx;
+  }
+}
+
+//分类
+.cate {
+  display: flex;
+  justify-content: space-around;
+  padding: 24rpx 0 29rpx 0;
+  background-color: #fff;
+  .cateitem {
+    image {
+      width: 128rpx;
+      height: 128rpx;
+    }
+  }
+}
+
+// 楼层
+
+.floor {
+  padding-top: 29rpx;
+  .floor-title {
+    image {
+      width: 750rpx;
+      height: 59rpx;
+    }
+  }
+  .floor-content {
+    padding: 20rpx 16rpx;
+    background-color: #fff;
+    display: flex;
+    .left {
+      margin-right: 10rpx;
+      image {
+        width: 232rpx;
+        height: 386rpx;
+        display: block;
+      }
+    }
+    .right {
+      display: flex;
+      flex-wrap: wrap;
+      image {
+        width: 233rpx;
+        height: 188rpx;
+        display: block;
+        &:nth-child(odd) {
+          margin-right: 10rpx;
+        }
+        &:nth-child(-n + 2) {
+          margin-bottom: 10rpx;
+        }
+      }
+    }
+  }
+}
+
+// 回到顶部
+.go-top {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  position: fixed;
+  right: 20rpx;
+  bottom: 50rpx;
+  background-color: rgba(255, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+<template lang="wxml">
+  <!-- 搜索 -->
+  <view class="scontainer">
+    <view class="swrapper">
+      <text class="iconfont icon-sousuo"></text>
+      <text style="margin-left: 10rpx;">搜索</text>
+    </view>
+  </view>
+  <!-- 首页轮播图 -->
+  <swiper circular="{{true}}" indicator-dots="{{true}}" autoplay="{{true}}">
+    <navigator wx:for="{{swiperlist}}" wx:key="{{index}}" url="{{item.navigator_url}}">
+      <swiper-item >
+      <image src="{{item.image_src}}"></image>
+    </swiper-item>
+    </navigator>
+    <!-- <swiper-item>
+      <image src="../assets/upload/banner2.png"></image>
+    </swiper-item>
+    <swiper-item>
+      <image src="../assets/upload/banner3.png"></image>
+    </swiper-item> -->
+  </swiper>
+
+  <!-- 分类 -->
+  <view class="cate">
+    <view class="cateitem" wx:for="{{catenavlist}}" wx:key="{{index}}">
+      <image src="{{item.image_src}}"></image>
+    </view>
+    <!-- <view class="cateitem">
+      <image src="../assets/upload/icon_index_nav_2@2x.png"></image>
+    </view>
+    <view class="cateitem">
+      <image src="../assets/upload/icon_index_nav_3@2x.png"></image>
+    </view>
+    <view class="cateitem">
+      <image src="../assets/upload/icon_index_nav_4@2x.png"></image>
+    </view> -->
+  </view>
+
+  <!-- 楼层 -->
+  <view class="floor" wx:for="{{floorlist}}" wx:key="{{index}}">
+    <view class="floor-title">
+      <image src="{{item.floor_title.image_src}}"></image>
+    </view>
+    <view class="floor-content">
+      <view class="left">
+        <image src="{{item.product_list[0].image_src}}"></image>
+      </view>
+      <view class="right">
+        <image 
+        wx:for="{{item.product_list}}"
+        wx:key="{{i}}"
+        wx:for-index="i"
+        wx:for-item = "ele"
+        wx:if="{{i != 0}}"
+        src="{{ele.image_src}}"
+        style="width: {{ele.image_width}}rpx"></image>
+      </view>
+    </view>
+  </view>
+
+  <!-- 回到顶部 -->
+  <view class="go-top" hidden="{{isHidden}}" @tap="goTop">
+    <text class="iconfont icon-jiantoushang"></text>
+    <text>顶部</text>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import fetch from '../utils/fetch'
+
+export default class Index extends wepy.page {
+  config = {
+    navigationBarTitleText: '品优购'
+  }
+  data = {
+    swiperlist: [],
+    catenavlist: [],
+    floorlist: [],
+    isHidden: true
+  }
+  methods = {
+    goTop() {
+      wepy.pageScrollTo({
+        scrollTop: 0,
+        duration: 300
+      })
+    }
+  }
+  onLoad() {
+    // 获取轮播图数据
+    this.getSwiperList()
+    this.getCateNavList()
+    this.getFloorList()
+  }
+
+  // onPageScroll 是一个异步函数
+  onPageScroll(option) {
+    if (option.scrollTop > 300) {
+      this.isHidden = false
+    } else {
+      this.isHidden = true
+    }
+    this.$apply()
+  }
+  // 封装的获取轮播图的异步函数
+  async getSwiperList() {
+    let res = await fetch({
+      url: '/home/swiperdata'
+    })
+     console.log(res)
+
+    this.swiperlist = res.data.data
+    this.$apply()
+  }
+
+  //  封装分类导航的异步函数
+  async getCateNavList() {
+    let res = await fetch({
+      url: '/home/catitems'
+    })
+    // console.log('====================================')
+    // console.log(res)
+    // console.log('====================================')
+    this.catenavlist = res.data.data
+    this.$apply()
+  }
+
+  // 封装楼层的异步函数
+  async getFloorList() {
+    let res = await fetch({
+      url: '/home/floordata'
+    })
+    // console.log(res)
+    this.floorlist = res.data.data
+    this.$apply()
+  }
+}
+</script>
